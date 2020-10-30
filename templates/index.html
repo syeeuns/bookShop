@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Bookshop</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <style>
+        .book-list {
+            margin: 10px auto;
+        }
+
+        .card {
+            margin: 10px auto;
+        }
+
+        #link-box {
+            display: none;
+            width: 600px;
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        $(function () {
+            showBooks();
+        })
+
+        function showBooks() {
+            $('.book-list').empty();
+            $.ajax({
+                type: 'GET',
+                url: '/api/list',
+                data: {},
+                success: function (response) {
+                    if (response['result'] === 'success') {
+                        let books = response['book_list'];
+
+                        for (let i = 0; i < books.length; i++) {
+                            let title = books[i]['title'];
+                            let img = books[i]['img'];
+                            let desc = books[i]['desc'];
+                            let author = books[i]['author'];
+                            let like = books[i]['like'];
+                            let url = books[i]['url'];
+
+                            makeCard(title, img, desc, author, like, url);
+                        }
+                    }
+                }
+            })
+        }
+
+        function postBook() {
+            url = $('#input-url').val();
+            $.ajax({
+                type: 'POST',
+                url: '/api/list',
+                data: {'url_give': url},
+                success: function (response) {
+                    if (response['result'] === 'success') {
+                        alert(response['msg']);
+                        window.location.reload();
+                    } else {
+                        alert('서버 오류!')
+                    }
+                }
+            })
+        }
+
+        function likeBook(book) {
+            $.ajax({
+                type: 'POST',
+                url: '/api/like',
+                data: {'book_give':book},
+                success: function (response) {
+                    if (response['result'] === 'success') {
+                        alert(response['msg']);
+                        window.location.reload();
+                    }
+                }
+            })
+        }
+
+        function dislikeBook(book) {
+            $.ajax({
+                type: 'POST',
+                url: '/api/dislike',
+                data: {'book_give':book},
+                success: function (response) {
+                    if (response['result'] === 'success') {
+                        alert(response['msg']);
+                        window.location.reload();
+                    }
+                }
+            })
+        }
+
+        function makeCard(title, img, desc, author, like, url) {
+            let temp_html =
+                `<div class="card mb-3" style="max-width: 540px;">
+                  <div class="row no-gutters">
+                    <div class="col-md-4">
+                      <img src="${img}" class="card-img" alt="${title}">
+                    </div>
+                    <div class="col-md-8">
+                      <div class="card-body">
+                        <h5 class="card-title"><a href="${url}" target="_blank">${title}</a><br>(좋아요: ${like})</h5>
+                        <p class="card-text">${desc}</p>
+                        <p class="card-text"><small class="text-muted">${author}</small></p>
+                      </div>
+
+                    </div>
+                  </div>
+                        <footer class="card-footer">
+                            <a href="#" class="card-footer-item has-text-danger" onclick="likeBook('${title}')" >좋아요<span class="icon"><i
+                                    class="fas fa-thumbs-up"></i></span></a>
+                            <a href="#" class="card-footer-item has-text-info" onclick="dislikeBook('${title}')">별로에요<span class="icon"><i
+                                    class="fas fa-thumbs-down"></i></span></a>
+                        </footer>
+                </div>`;
+
+            $('.book-list').append(temp_html);
+
+        }
+
+        function openClose() {
+            let status = $('#link-box').css('display');
+            if (status === 'block') {
+                $('#link-box').hide();
+                $('#btn-posting-box').text('책 추가하기');
+            } else {
+                $('#link-box').show();
+                $('#btn-posting-box').text('추가박스 닫기');
+            }
+        }
+    </script>
+</head>
+<body>
+<section class="hero is-light">
+    <div class="hero-body">
+        <div class="container">
+            <h1 class="title">
+                읽고 싶은 책
+            </h1>
+            <h2 class="subtitle">
+                순위를 매겨봅시다. 원하는 책을 추가할 수 있습니다.
+            </h2>
+            <button class="button is-dark" onclick="openClose()" id="btn-posting-box">책 추가하기</button>
+        </div>
+    </div>
+</section>
+
+<div class="container" id="link-box">
+    <div class="field">
+        <label class="label">책 링크</label>
+        <div class="control">
+            <input id="input-url" class="input" type="text" placeholder="yes24 홈페이지의 책 상세 페이지 링크를 넣어주세요.">
+        </div>
+    </div>
+    <button class="button is-dark" onclick="postBook()">책 추가하기</button>
+</div>
+
+
+<div class="book-list">
+    <div class="card mb-3" style="max-width: 540px;">
+        <div class="row no-gutters">
+            <div class="col-md-4">
+                <img src="http://image.yes24.com/goods/93522583/800x0" class="card-img" alt="...">
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h5 class="card-title">제목<br>(좋아요: 0)</h5>
+                    <p class="card-text">채널A [요즘 육아 금쪽같은 내 새끼] SBS [우리 아이가 달라졌어요]
+                        국민 육아멘토 오은영 박사가 알려주는 ‘부모의 말’
+                        육아 현실을 200퍼센트 반영한 130가지 한마디</p>
+                    <p class="card-text"><small class="text-muted">오영은</small></p>
+                </div>
+
+            </div>
+        </div>
+        <footer class="card-footer">
+            <a href="#" class="card-footer-item has-text-danger" onclick="likeBook()">좋아요<span class="icon"><i
+                    class="fas fa-thumbs-up"></i></span></a>
+            <a href="#" class="card-footer-item has-text-info" onclick="dislikeBook()">별로에요<span class="icon"><i
+                    class="fas fa-thumbs-down"></i></span></a>
+        </footer>
+    </div>
+</div>
+</body>
+</html>
+
